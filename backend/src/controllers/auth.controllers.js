@@ -1,6 +1,7 @@
 import User from "../models/User.model.js";
 import bcrypt from 'bcryptjs';
 import { generateToken } from "../lib/utils.js";
+import { sendEmail } from "../email/emailHandlers.js";
 
 const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
@@ -35,8 +36,9 @@ export const signup = async (req, res) => {
         });
 
         if (newUser) {
-            generateToken(newUser._id,res);
-            await newUser.save()
+
+            const savedUser = await newUser.save();
+            generateToken(savedUser._id,res);
 
             res.status(201).json({
                 _id: newUser._id,
@@ -44,7 +46,14 @@ export const signup = async (req, res) => {
                 email: newUser.email,
                 profileImg: newUser.profileImg
             })
+
+            try{
+                await sendEmail(savedUser.email, savedUser.fullName);
+            }catch (err) {
+                console.log('Error sending in email',err);
+            }
         }
+
         else{
             return res.status(400).json({message:'Invalid user data'})
         }
