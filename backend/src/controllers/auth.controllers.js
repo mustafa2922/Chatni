@@ -105,6 +105,7 @@ export const logout = (_, res) => {
     res.status(200).json({message:'Logged out successfuly'});
 };
 
+
 // updateProfile controller
 export const updateProfile = async (req,res) => {
     try{
