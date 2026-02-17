@@ -17,7 +17,36 @@ export const getAllContacts = async (req, res) => {
     }
 };
 
-export const getChatPartners = async () => { };
+    export const getChatPartners = async (req, res) => {
+        try {
+
+            const loggedInUser = req.user._id;
+
+            const messages = await Message.find({
+                $or: [{ senderId: loggedInUser }, { receiverId: loggedInUser }]
+            })
+
+            const chatPartners = [
+                ...new Set(
+                    messages.map((msg) => {
+                        return msg.senderId.toString() === loggedInUser.toString()
+                            ? msg.receiverId.toString()
+                            : msg.senderId.toString()
+                    })
+                )
+            ];
+            
+            const contacts = await User.find({
+                _id: { $in: chatPartners }
+            });
+                    
+            res.status(200).json(contacts);
+
+        } catch (err) {
+            console.log("Error in getChatPartners: ", err)
+            res.status(500).json({ message: 'Internal serevr error' });
+        };
+    };
 
 export const getMessagesById = async (req, res) => {
     try {
